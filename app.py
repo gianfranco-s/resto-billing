@@ -1,10 +1,10 @@
 import json
-from flask import Flask, redirect, render_template, request, session, flash
-from flaskext.mysql import MySQL
-from datetime import datetime
 import os
-from flask import send_from_directory
 import cryptocode
+
+from datetime import datetime
+from flask import Flask, redirect, render_template, request, session, flash, send_from_directory
+from flaskext.mysql import MySQL
 
 cantidad_mesas = 3
 
