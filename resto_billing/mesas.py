@@ -1,5 +1,5 @@
 
-from flask import Blueprint, session, request, current_app, render_template, flash, redirect
+from flask import Blueprint, session, request, current_app, render_template, flash, redirect, make_response
 from . import database
 import json
 
@@ -51,3 +51,21 @@ def mesas():
     else:
         flash('Debe registrarse antes')
         return redirect('/')
+
+
+@bp.route('/cantidad_mesas/', methods=['POST'])
+def cantidadMesas():
+    """Cantidad de mesas del negocio"""
+
+    current_app.config['CANTIDAD_DE_MESAS'] = int(request.form['cantidad_mesas'])
+    conn = database.connect()
+    cursor = conn.cursor()
+    cursor.execute("SELECT count(*) FROM mesas")
+    mesas = int(cursor.fetchone()[0])
+    while mesas < current_app.config['CANTIDAD_DE_MESAS']:
+        cursor.execute("INSERT INTO mesas(pedidos) VALUES(NULL)")
+        mesas += 1
+    conn.commit()
+    respuesta = make_response(redirect('/administracion'))
+    respuesta.set_cookie('mesas', str(current_app.config['CANTIDAD_DE_MESAS']))
+    return respuesta

@@ -408,24 +408,24 @@ def cargarPedido(mesa):
     return redirect('/mesas/')
 
 
-@app.route('/cantidad_mesas/', methods=['POST'])
-def cantidadMesas():
-    """Cantidad de mesas del negocio"""
+# @app.route('/cantidad_mesas/', methods=['POST'])
+# def cantidadMesas():
+#     """Cantidad de mesas del negocio"""
 
-    app.config['CANTIDAD_DE_MESAS'] = int(request.form['cantidad_mesas'])
-    conn = mysql.connect()
-    cursor = conn.cursor()
-    cursor.execute("SELECT count(*) FROM `my_resto`.`mesas`")
-    mesas = int(cursor.fetchone()[0])
-    """Mientras que la cantidad de mesas existentes sea menor
-    que la indicada por el usuario"""
-    while mesas < app.config['CANTIDAD_DE_MESAS']:
-        cursor.execute("INSERT `my_resto`.`mesas`(`pedidos`) VALUES(NULL)")
-        mesas += 1
-    conn.commit()
-    respuesta = make_response(redirect('/administracion'))
-    respuesta.set_cookie('mesas', str(app.config['CANTIDAD_DE_MESAS']))
-    return respuesta
+#     app.config['CANTIDAD_DE_MESAS'] = int(request.form['cantidad_mesas'])
+#     conn = mysql.connect()
+#     cursor = conn.cursor()
+#     cursor.execute("SELECT count(*) FROM `my_resto`.`mesas`")
+#     mesas = int(cursor.fetchone()[0])
+#     """Mientras que la cantidad de mesas existentes sea menor
+#     que la indicada por el usuario"""
+#     while mesas < app.config['CANTIDAD_DE_MESAS']:
+#         cursor.execute("INSERT `my_resto`.`mesas`(`pedidos`) VALUES(NULL)")
+#         mesas += 1
+#     conn.commit()
+#     respuesta = make_response(redirect('/administracion'))
+#     respuesta.set_cookie('mesas', str(app.config['CANTIDAD_DE_MESAS']))
+#     return respuesta
 
 
 @app.route('/cerrar_cuenta/<int:mesa>/')
