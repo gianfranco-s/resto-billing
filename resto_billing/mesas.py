@@ -17,7 +17,7 @@ def mesas():
     if 'username' in session:
         conn = database.connect()
         cursor = conn.cursor()
-        cursor.execute("SELECT id_mesa,pedidos FROM mesas")
+        cursor.execute("SELECT id_mesa,pedidos FROM mesas ORDER BY id_mesa ASC")
         mesas_backend = cursor.fetchall()
         mesas = list()
         for mesa in mesas_backend:
