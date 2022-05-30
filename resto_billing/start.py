@@ -13,14 +13,17 @@ def login():
 @bp.route('/ingresar', methods=['POST'])
 def ingresar():
     nombre = request.form['txtUsuario']
+    nombre = (nombre, )
     password = request.form['txtPassword']
-    sql = "SELECT * FROM `my_resto`.`usuarios` WHERE `usuario` LIKE %s"
     conn = database.connect_to_db()
     cursor = conn.cursor()
-    cursor.execute(sql, nombre)
+
+    cursor.execute("SELECT * FROM usuarios WHERE usuario LIKE %s", nombre)
     global usuario
     usuario = cursor.fetchall()
+    current_app.config['USUARIO'] = usuario
     conn.commit()
+
     if usuario != ():
         clave2 = cryptocode.decrypt(usuario[0][1], current_app.secret_key)
         if password == clave2:
@@ -34,3 +37,10 @@ def ingresar():
     else:
         flash('Usuario o contraseña erroneos')
         return redirect('/')
+
+
+@bp.route('/logout/')
+def logout():
+    session.pop('username', None)  # Borramos la cookie
+    session.pop('super', None)  # Borramos la cookie
+    return redirect('/')

@@ -41,4 +41,8 @@ def create_app(test_config=None):
     from . import start
     app.register_blueprint(start.bp)
 
+
+    from . import mesas
+    app.register_blueprint(mesas.bp)
+
     return app
