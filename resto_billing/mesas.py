@@ -2,7 +2,7 @@
 from flask import Blueprint, session, request, current_app, render_template, flash, redirect, make_response
 from . import database
 import json
-
+from datetime import datetime
 
 bp = Blueprint('mesas', __name__)
 
@@ -69,3 +69,59 @@ def cantidadMesas():
     respuesta = make_response(redirect('/administracion'))
     respuesta.set_cookie('mesas', str(current_app.config['CANTIDAD_DE_MESAS']))
     return respuesta
+
+
+@bp.route('/platos/<int:id_mesa>/')
+def platos(id_mesa):
+    """Listado del menu disponible
+    Agregar o quitar platos al pedido
+    """
+
+    if 'username' in session:
+        conn = database.connect()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM platos;")
+        platos = cursor.fetchall()
+        conn.commit()
+        return render_template('platos.html', platos=platos, mesa=id_mesa)
+    else:
+        return redirect('/')
+
+
+@bp.route('/cargarPedido/<int:mesa>', methods=['POST'])
+def cargarPedido(mesa):
+    """Cargar pedidos a una mesa"""
+
+    conn = database.connect()
+    cursor = conn.cursor()
+    sql = "SELECT pedidos FROM mesas WHERE id_mesa=%s;"
+    cursor.execute(sql, (mesa, ))
+    pedidos = cursor.fetchall()[0][0]
+    if bool(pedidos):
+        pedidos = json.loads(str(pedidos))
+    else:
+        hora = datetime.now()
+        datos = (hora, mesa)
+        sql = "UPDATE mesas SET hora_abre=%s WHERE id_mesa=%s;"
+        cursor.execute(sql, datos)
+        pedidos = {}
+    keysDB = pedidos.keys()
+    datosForm = request.form
+    keysForm = datosForm.keys()
+    for keyForm in keysForm:
+        if int(datosForm[keyForm]) != 0:
+            valor = int(datosForm[keyForm])
+            if keyForm in keysDB:  # Pedido previamente
+                if (int(pedidos[keyForm]) + valor) > 0:
+                    pedidos[keyForm] = int(pedidos[keyForm]) + valor
+                else:
+                    pedidos.pop(keyForm)
+            elif valor > 0:
+                pedidos.setdefault(keyForm, datosForm[keyForm])
+        for key in pedidos:
+            pedidos[key] = int(pedidos[key])
+    sql = "UPDATE mesas SET pedidos=%s WHERE id_mesa=%s;"
+    valores = (json.dumps(pedidos), (mesa, ))
+    cursor.execute(sql, valores)
+    conn.commit()
+    return redirect('/mesas/')
