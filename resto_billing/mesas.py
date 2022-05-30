@@ -26,7 +26,7 @@ def mesas():
             suma = 0
             subtotales = list()
             if pedido:
-                pedido = json.loads(pedido)  # mesa[1] trae un json
+                # pedido = json.loads(pedido)  # mesa[1] trae un json
                 for plato, cantidad in pedido.items():
                     cursor.execute("""SELECT precio FROM platos
                                    WHERE nombre LIKE %s;""", (plato, ))
@@ -98,7 +98,8 @@ def cargarPedido(mesa):
     cursor.execute(sql, (mesa, ))
     pedidos = cursor.fetchall()[0][0]
     if bool(pedidos):
-        pedidos = json.loads(str(pedidos))
+        # pedidos = json.loads(str(pedidos))
+        pedidos = pedidos
     else:
         hora = datetime.now()
         datos = (hora, mesa)
