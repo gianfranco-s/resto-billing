@@ -11,7 +11,7 @@ sudo -u postgres psql -c 'CREATE DATABASE my_resto WITH OWNER resto_billing'
 
 Run the project:
 ``` 
-export FLASK_APP=resto_billing; export FLASK_ENV=development; flask run
+export FLASK_DEBUG=1; export FLASK_APP=resto_billing; export FLASK_ENV=development; flask run
 ```
 
 Drop database:

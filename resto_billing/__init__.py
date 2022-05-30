@@ -37,6 +37,9 @@ def create_app(test_config=None):
     database.create_tables()
     database.create_admin_user(app.secret_key)
     database.define_default_category()
+    
+    if os.environ.get('FLASK_DEBUG', '').lower() in ('1', 'true'):
+        database.load_test_data()
 
     from . import start
     app.register_blueprint(start.bp)
