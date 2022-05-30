@@ -44,3 +44,56 @@ def logout():
     session.pop('username', None)  # Borramos la cookie
     session.pop('super', None)  # Borramos la cookie
     return redirect('/')
+
+
+@bp.route('/crear_usuario/', methods=['POST'])
+def crear_usuario():
+    """Creacion de nuevo usuario. Requiere ser super usuario"""
+
+    if 'super' in session:
+        nuevoUsuario = request.form['txtUsuario']
+        nuevoPassword = request.form['txtPassword']
+        super = request.form.get('superUsuario')
+        nuevoPassword = cryptocode.encrypt(nuevoPassword, current_app.secret_key)
+        usuario1 = nuevoUsuario, nuevoPassword, super
+        sql = """INSERT INTO usuarios(
+            usuario, password, super_usuario) VALUES (%s, %s,%s)"""
+        conn = database.connect()
+        cursor = conn.cursor()
+        cursor.execute("SELECT usuario FROM usuarios;")
+        usuarios1 = cursor.fetchall()
+        usuarios = []
+        for usuarioj in usuarios1:
+            usuarios.append(usuarioj[0])
+        if nuevoUsuario not in usuarios:
+            cursor.execute(sql, usuario1)
+        else:
+            flash('Nombre de usuario no disponible')
+        conn.commit()
+        return redirect('/administracion')
+    else:
+        flash('Usted no tiene los permisos para agregar un nuevo usuario')
+        return redirect('/')
+
+
+@bp.route('/modificar_usuario/', methods=['POST'])
+def modificar_usuario():
+    """Edicion datos usuario (propios)"""
+
+    if 'username' in session:
+        nuevoNombre = request.form['txtUsuario']
+        nuevoPassword = request.form['txtPassword']
+        nuevoPassword = cryptocode.encrypt(nuevoPassword, current_app.secret_key)
+        usuario1 = (nuevoNombre, nuevoPassword, usuario[0][0])
+        sql = """UPDATE usuarios
+        SET usuario= %s, password= %s WHERE usuario=%s;"""
+        conn = database.connect()
+        cursor = conn.cursor()
+        cursor.execute("SELECT usuario FROM usuarios;")
+        usuarios = cursor.fetchall()  # Almacenamos los datos en una tupla
+        if nuevoNombre not in usuarios or nuevoNombre == usuario[0][0]:
+            cursor.execute(sql, usuario1)  # Actualizamos del usuario
+        else:
+            flash('Nombre de usuario no disponible')
+        conn.commit()
+        return redirect('/administracion')

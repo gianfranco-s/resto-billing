@@ -119,21 +119,21 @@ app.secret_key = '123Prueba!'
 #     return redirect('/')
 
 
-@app.route('/platos/<int:id_mesa>/')
-def platos(id_mesa):
-    """Listado del menu disponible
-    Agregar o quitar platos al pedido
-    """
+# @app.route('/platos/<int:id_mesa>/')
+# def platos(id_mesa):
+#     """Listado del menu disponible
+#     Agregar o quitar platos al pedido
+#     """
 
-    if 'username' in session:
-        conn = mysql.connect()
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM `my_resto`.`platos`;")
-        platos = cursor.fetchall()
-        conn.commit()
-        return render_template('platos.html', platos=platos, mesa=id_mesa)
-    else:
-        return redirect('/')
+#     if 'username' in session:
+#         conn = mysql.connect()
+#         cursor = conn.cursor()
+#         cursor.execute("SELECT * FROM `my_resto`.`platos`;")
+#         platos = cursor.fetchall()
+#         conn.commit()
+#         return render_template('platos.html', platos=platos, mesa=id_mesa)
+#     else:
+#         return redirect('/')
 
 
 # @app.route('/administracion/')
@@ -316,96 +316,96 @@ def platos(id_mesa):
 #     return send_from_directory(app.config['CARPETA'], nombreFoto)
 
 
-@app.route('/crear_usuario/', methods=['POST'])
-def crear_usuario():
-    """Creacion de nuevo usuario. Requiere ser super usuario"""
+# @app.route('/crear_usuario/', methods=['POST'])
+# def crear_usuario():
+#     """Creacion de nuevo usuario. Requiere ser super usuario"""
 
-    if 'super' in session:
-        nuevoUsuario = request.form['txtUsuario']
-        nuevoPassword = request.form['txtPassword']
-        super = request.form.get('superUsuario')
-        nuevoPassword = cryptocode.encrypt(nuevoPassword, app.secret_key)
-        usuario1 = nuevoUsuario, nuevoPassword, super
-        sql = """INSERT INTO `my_resto`.`usuarios` (
-            `usuario`, `password`, `super_usuario`) VALUES (%s, %s,%s)"""
-        conn = mysql.connect()
-        cursor = conn.cursor()
-        cursor.execute("SELECT `usuario` FROM `my_resto`.`usuarios` ;")
-        usuarios1 = cursor.fetchall()
-        usuarios = []
-        for usuarioj in usuarios1:
-            usuarios.append(usuarioj[0])
-        if nuevoUsuario not in usuarios:
-            cursor.execute(sql, usuario1)
-        else:
-            flash('Nombre de usuario no disponible')
-        conn.commit()
-        return redirect('/administracion')
-    else:
-        flash('Usted no tiene los permisos para agregar un nuevo usuario')
-        return redirect('/')
-
-
-@app.route('/modificar_usuario/', methods=['POST'])
-def modificar_usuario():
-    """Edicion datos usuario (propios)"""
-
-    if 'username' in session:
-        nuevoNombre = request.form['txtUsuario']
-        nuevoPassword = request.form['txtPassword']
-        nuevoPassword = cryptocode.encrypt(nuevoPassword, app.secret_key)
-        usuario1 = (nuevoNombre, nuevoPassword, usuario[0][0])
-        sql = """UPDATE `my_resto`.`usuarios`
-        SET `usuario`= %s, `password`= %s WHERE `usuario`=%s;"""
-        conn = mysql.connect()
-        cursor = conn.cursor()
-        cursor.execute("SELECT `usuario` FROM `my_resto`.`usuarios` ;")
-        usuarios = cursor.fetchall()  # Almacenamos los datos en una tupla
-        if nuevoNombre not in usuarios or nuevoNombre == usuario[0][0]:
-            cursor.execute(sql, usuario1)  # Actualizamos del usuario
-        else:
-            flash('Nombre de usuario no disponible')
-        conn.commit()
-        return redirect('/administracion')
+#     if 'super' in session:
+#         nuevoUsuario = request.form['txtUsuario']
+#         nuevoPassword = request.form['txtPassword']
+#         super = request.form.get('superUsuario')
+#         nuevoPassword = cryptocode.encrypt(nuevoPassword, app.secret_key)
+#         usuario1 = nuevoUsuario, nuevoPassword, super
+#         sql = """INSERT INTO `my_resto`.`usuarios` (
+#             `usuario`, `password`, `super_usuario`) VALUES (%s, %s,%s)"""
+#         conn = mysql.connect()
+#         cursor = conn.cursor()
+#         cursor.execute("SELECT `usuario` FROM `my_resto`.`usuarios` ;")
+#         usuarios1 = cursor.fetchall()
+#         usuarios = []
+#         for usuarioj in usuarios1:
+#             usuarios.append(usuarioj[0])
+#         if nuevoUsuario not in usuarios:
+#             cursor.execute(sql, usuario1)
+#         else:
+#             flash('Nombre de usuario no disponible')
+#         conn.commit()
+#         return redirect('/administracion')
+#     else:
+#         flash('Usted no tiene los permisos para agregar un nuevo usuario')
+#         return redirect('/')
 
 
-@app.route('/cargarPedido/<int:mesa>', methods=['POST'])
-def cargarPedido(mesa):
-    """Cargar pedidos a una mesa"""
+# @app.route('/modificar_usuario/', methods=['POST'])
+# def modificar_usuario():
+#     """Edicion datos usuario (propios)"""
 
-    conn = mysql.connect()
-    cursor = conn.cursor()
-    sql = "SELECT `pedidos` FROM `my_resto`.`mesas` WHERE `id_mesa` LIKE %s ;"
-    cursor.execute(sql, mesa)
-    pedidos = cursor.fetchall()[0][0]
-    if bool(pedidos):
-        pedidos = json.loads(str(pedidos))
-    else:
-        hora = datetime.now()
-        datos = [hora, mesa]
-        sql = "UPDATE `my_resto`.`mesas`SET`hora_abre`=%s WHERE `id_mesa`=%s;"
-        cursor.execute(sql, datos)
-        pedidos = {}
-    keysDB = pedidos.keys()
-    datosForm = request.form
-    keysForm = datosForm.keys()
-    for keyForm in keysForm:
-        if int(datosForm[keyForm]) != 0:
-            valor = int(datosForm[keyForm])
-            if keyForm in keysDB:  # Pedido previamente
-                if (int(pedidos[keyForm]) + valor) > 0:
-                    pedidos[keyForm] = int(pedidos[keyForm]) + valor
-                else:
-                    pedidos.pop(keyForm)
-            elif valor > 0:
-                pedidos.setdefault(keyForm, datosForm[keyForm])
-        for key in pedidos:
-            pedidos[key] = int(pedidos[key])
-    sql = "UPDATE `my_resto`.`mesas` SET `pedidos`=%s WHERE `id_mesa`=%s;"
-    valores = (json.dumps(pedidos), mesa)
-    cursor.execute(sql, valores)
-    conn.commit()
-    return redirect('/mesas/')
+#     if 'username' in session:
+#         nuevoNombre = request.form['txtUsuario']
+#         nuevoPassword = request.form['txtPassword']
+#         nuevoPassword = cryptocode.encrypt(nuevoPassword, app.secret_key)
+#         usuario1 = (nuevoNombre, nuevoPassword, usuario[0][0])
+#         sql = """UPDATE `my_resto`.`usuarios`
+#         SET `usuario`= %s, `password`= %s WHERE `usuario`=%s;"""
+#         conn = mysql.connect()
+#         cursor = conn.cursor()
+#         cursor.execute("SELECT `usuario` FROM `my_resto`.`usuarios` ;")
+#         usuarios = cursor.fetchall()  # Almacenamos los datos en una tupla
+#         if nuevoNombre not in usuarios or nuevoNombre == usuario[0][0]:
+#             cursor.execute(sql, usuario1)  # Actualizamos del usuario
+#         else:
+#             flash('Nombre de usuario no disponible')
+#         conn.commit()
+#         return redirect('/administracion')
+
+
+# @app.route('/cargarPedido/<int:mesa>', methods=['POST'])
+# def cargarPedido(mesa):
+#     """Cargar pedidos a una mesa"""
+
+#     conn = mysql.connect()
+#     cursor = conn.cursor()
+#     sql = "SELECT `pedidos` FROM `my_resto`.`mesas` WHERE `id_mesa` LIKE %s ;"
+#     cursor.execute(sql, mesa)
+#     pedidos = cursor.fetchall()[0][0]
+#     if bool(pedidos):
+#         pedidos = json.loads(str(pedidos))
+#     else:
+#         hora = datetime.now()
+#         datos = [hora, mesa]
+#         sql = "UPDATE `my_resto`.`mesas`SET`hora_abre`=%s WHERE `id_mesa`=%s;"
+#         cursor.execute(sql, datos)
+#         pedidos = {}
+#     keysDB = pedidos.keys()
+#     datosForm = request.form
+#     keysForm = datosForm.keys()
+#     for keyForm in keysForm:
+#         if int(datosForm[keyForm]) != 0:
+#             valor = int(datosForm[keyForm])
+#             if keyForm in keysDB:  # Pedido previamente
+#                 if (int(pedidos[keyForm]) + valor) > 0:
+#                     pedidos[keyForm] = int(pedidos[keyForm]) + valor
+#                 else:
+#                     pedidos.pop(keyForm)
+#             elif valor > 0:
+#                 pedidos.setdefault(keyForm, datosForm[keyForm])
+#         for key in pedidos:
+#             pedidos[key] = int(pedidos[key])
+#     sql = "UPDATE `my_resto`.`mesas` SET `pedidos`=%s WHERE `id_mesa`=%s;"
+#     valores = (json.dumps(pedidos), mesa)
+#     cursor.execute(sql, valores)
+#     conn.commit()
+#     return redirect('/mesas/')
 
 
 # @app.route('/cantidad_mesas/', methods=['POST'])
@@ -471,65 +471,66 @@ def cerrarCuenta(mesa):
         return redirect('/mesas')
 
 
-@app.route('/ventas/', methods=['GET'])
-def ventas():
-    """Listado de todas las ventas históricas"""
+# @app.route('/ventas/', methods=['GET'])
+# def ventas():
+#     """Listado de todas las ventas históricas"""
 
-    if 'super' in session:
-        desde = request.args.get('desde')
-        hasta = request.args.get('hasta')
-        mesa = request.args.get('mesa')
-        datos = [desde, hasta]
-        conn = mysql.connect()
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM `my_resto`.`ventas`")
-        ventas = list(cursor.fetchall())
-        if len(ventas) > 0:
-            fechasMin = (str((ventas[0][2]))).split(' ')[0]
-        else:
-            fechasMin = datetime.today().strftime('%Y-%m-%d')
-        fechasMax = datetime.today().strftime('%Y-%m-%d')
-        cursor.execute("SELECT count(*) FROM `my_resto`.`mesas`")
-        totalMesas = cursor.fetchone()[0]
-        listaMesas = []
-        for i in range(1, totalMesas+1):
-            listaMesas.append(i)
-        if desde and hasta:
-            sql = """SELECT * FROM `my_resto`.`ventas`
-            WHERE `hora_abre` BETWEEN %s AND %s"""
-            if mesa:
-                if mesa != 'Todas':
-                    sql += ' AND `mesa` LIKE %s'
-                    datos.append(int(mesa))
-            else:
-                mesa = 'Todas'
-            cursor.execute(sql, datos)
-            ventas = list(cursor.fetchall())
-            fechasMin = desde
-            fechasMax = hasta
-        else:
-            mesa = 'Todas'
-        fechasMinMax = (fechasMin, fechasMax)
-        total = 0
-        for i in range(len(ventas)):
-            ventas[i] = list(ventas[i])
-            ventas[i][4] = (ventas[i][4][1:-1]).split(',')
-            total += ventas[i][5]
-        conn.commit()
-        return render_template('ventas.html',
-                               ventas=ventas,
-                               total=total,
-                               fechasMinMax=fechasMinMax,
-                               listaMesas=listaMesas,
-                               mesa=mesa)
-    flash('Usuario no autorizado a ver el historial')
-    return redirect('/mesas')
+#     if 'super' in session:
+#         desde = request.args.get('desde')
+#         hasta = request.args.get('hasta')
+#         mesa = request.args.get('mesa')
+#         datos = [desde, hasta]
+#         conn = mysql.connect()
+#         cursor = conn.cursor()
+#         cursor.execute("SELECT * FROM `my_resto`.`ventas`")
+#         ventas = list(cursor.fetchall())
+#         if len(ventas) > 0:
+#             fechasMin = (str((ventas[0][2]))).split(' ')[0]
+#         else:
+#             fechasMin = datetime.today().strftime('%Y-%m-%d')
+#         fechasMax = datetime.today().strftime('%Y-%m-%d')
+#         cursor.execute("SELECT count(*) FROM `my_resto`.`mesas`")
+#         totalMesas = cursor.fetchone()[0]
+#         listaMesas = []
+#         for i in range(1, totalMesas+1):
+#             listaMesas.append(i)
+#         if desde and hasta:
+#             sql = """SELECT * FROM `my_resto`.`ventas`
+#             WHERE `hora_abre` BETWEEN %s AND %s"""
+#             if mesa:
+#                 if mesa != 'Todas':
+#                     sql += ' AND `mesa` LIKE %s'
+#                     datos.append(int(mesa))
+#             else:
+#                 mesa = 'Todas'
+#             cursor.execute(sql, datos)
+#             ventas = list(cursor.fetchall())
+#             fechasMin = desde
+#             fechasMax = hasta
+#         else:
+#             mesa = 'Todas'
+#         fechasMinMax = (fechasMin, fechasMax)
+#         total = 0
+#         for i in range(len(ventas)):
+#             ventas[i] = list(ventas[i])
+#             ventas[i][4] = (ventas[i][4][1:-1]).split(',')
+#             total += ventas[i][5]
+#         conn.commit()
+#         return render_template('ventas.html',
+#                                ventas=ventas,
+#                                total=total,
+#                                fechasMinMax=fechasMinMax,
+#                                listaMesas=listaMesas,
+#                                mesa=mesa)
+#     flash('Usuario no autorizado a ver el historial')
+#     return redirect('/mesas')
 
 
-@app.route('/seleccion_mesas/')
-def seleccionmesas():
-    app.config['CANTIDAD_DE_MESAS'] = int(request.form['cantidad_mesas'])
-    return redirect('/mesas')
+# # UNUSED
+# @app.route('/seleccion_mesas/')
+# def seleccionmesas():
+#     app.config['CANTIDAD_DE_MESAS'] = int(request.form['cantidad_mesas'])
+#     return redirect('/mesas')
 
 
 # def borrar_foto(nombre):
