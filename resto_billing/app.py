@@ -17,11 +17,11 @@ import database
 app = Flask(__name__)
 
 app.secret_key = '123Prueba!'
-app.config['MYSQL_DATABASE_HOST'] = 'localhost'
-app.config['MYSQL_DATABASE_USER'] = 'root'
-app.config['MYSQL_DATABASE_PASSWORD'] = ''
+# app.config['MYSQL_DATABASE_HOST'] = 'localhost'
+# app.config['MYSQL_DATABASE_USER'] = 'root'
+# app.config['MYSQL_DATABASE_PASSWORD'] = ''
 app.config['CARPETA'] = os.path.join('fotos')
-app.config['CANTIDAD_DE_MESAS'] = int()
+# app.config['CANTIDAD_DE_MESAS'] = int()
 
 
 mysql = MySQL()
@@ -136,35 +136,35 @@ def platos(id_mesa):
         return redirect('/')
 
 
-@app.route('/administracion/')
-def administracion():
-    """Administración
-    Alta y edición de usuarios
-    Platos
-    Configura la cantidad de mesas
-    """
+# @app.route('/administracion/')
+# def administracion():
+#     """Administración
+#     Alta y edición de usuarios
+#     Platos
+#     Configura la cantidad de mesas
+#     """
 
-    if 'username' in session:
-        conn = mysql.connect()
-        cursor = conn.cursor()
-        cursor.execute("""SELECT* FROM `my_resto`.`platos`,
-                            `my_resto`.`categorias` WHERE
-                            `categorias`.`id_categoria`=
-                            `platos`.`id_categoria`
-                            ORDER BY `categoria`;""")
-        platos = cursor.fetchall()
-        cursor.execute("SELECT* FROM `my_resto`.`categorias`;")
-        categorias = cursor.fetchall()
-        conn.commit()
-        """Renderizamos administracion.html
-        pasando el menu y la cantidad de mesas seleccionadas"""
-        return render_template(
-                'administracion.html',
-                platos=platos,
-                cantidad=app.config['CANTIDAD_DE_MESAS'],
-                categorias=categorias)
-    else:
-        return redirect('/')
+#     if 'username' in session:
+#         conn = mysql.connect()
+#         cursor = conn.cursor()
+#         cursor.execute("""SELECT* FROM `my_resto`.`platos`,
+#                             `my_resto`.`categorias` WHERE
+#                             `categorias`.`id_categoria`=
+#                             `platos`.`id_categoria`
+#                             ORDER BY `categoria`;""")
+#         platos = cursor.fetchall()
+#         cursor.execute("SELECT* FROM `my_resto`.`categorias`;")
+#         categorias = cursor.fetchall()
+#         conn.commit()
+#         """Renderizamos administracion.html
+#         pasando el menu y la cantidad de mesas seleccionadas"""
+#         return render_template(
+#                 'administracion.html',
+#                 platos=platos,
+#                 cantidad=app.config['CANTIDAD_DE_MESAS'],
+#                 categorias=categorias)
+#     else:
+#         return redirect('/')
 
 
 @app.route('/destroy/<int:id>')  # Recibe como parámetro el id del producto

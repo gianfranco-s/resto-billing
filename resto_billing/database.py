@@ -14,7 +14,7 @@ import psycopg2
 bp = Blueprint('database', __name__)
 
 
-def connect_to_db():
+def connect():
     # mysql = MySQL()
     # mysql.init_app(current_app)
     # return mysql.connect()
@@ -28,7 +28,7 @@ def connect_to_db():
 
 
 def create_tables():
-    conn = connect_to_db()
+    conn = connect()
     cursor = conn.cursor()
 
     # cursor.execute("CREATE DATABASE IF NOT EXISTS `my_resto`;")
@@ -113,7 +113,7 @@ def create_tables():
 
 
 def create_admin_user(secret_key):
-    conn = connect_to_db()
+    conn = connect()
     cursor = conn.cursor()
     # cursor.execute("SELECT count(*) FROM `my_resto`.`usuarios`")
     # cantidad_de_usuarios = cursor.fetchone()[0]
@@ -135,7 +135,7 @@ def create_admin_user(secret_key):
 
 
 def define_default_category():
-    conn = connect_to_db()
+    conn = connect()
     cursor = conn.cursor()
     # cursor.execute("SELECT count(*) FROM `my_resto`.`categorias`")
     # cantidad_de_categorias = cursor.fetchone()[0]

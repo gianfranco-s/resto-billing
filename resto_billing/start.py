@@ -15,7 +15,7 @@ def ingresar():
     nombre = request.form['txtUsuario']
     nombre = (nombre, )
     password = request.form['txtPassword']
-    conn = database.connect_to_db()
+    conn = database.connect()
     cursor = conn.cursor()
 
     cursor.execute("SELECT * FROM usuarios WHERE usuario LIKE %s", nombre)

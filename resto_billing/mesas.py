@@ -15,7 +15,7 @@ def mesas():
         current_app.config['CANTIDAD_DE_MESAS'] = int(cookie)
 
     if 'username' in session:
-        conn = database.connect_to_db()
+        conn = database.connect()
         cursor = conn.cursor()
         cursor.execute("SELECT id_mesa,pedidos FROM mesas")
         mesas_backend = cursor.fetchall()

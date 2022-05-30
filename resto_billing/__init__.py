@@ -5,10 +5,9 @@ from flask import Flask
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
-    app.config.from_mapping(
-        SECRET_KEY='dev',
-        # DATABASE=os.path.join(app.instance_path, 'resto_billing_app.sqlite'),
-    )
+    
+    app.config.from_mapping(SECRET_KEY='dev')
+    app.config['CANTIDAD_DE_MESAS'] = int()
 
     if test_config is None:
         # load the instance config, if it exists, when not testing
@@ -44,5 +43,9 @@ def create_app(test_config=None):
 
     from . import mesas
     app.register_blueprint(mesas.bp)
+
+
+    from . import administracion
+    app.register_blueprint(administracion.bp)
 
     return app
