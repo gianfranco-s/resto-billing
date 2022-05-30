@@ -49,7 +49,12 @@ def create_app(test_config=None):
     from . import administracion
     app.register_blueprint(administracion.bp)
 
+
     from . import platos
     app.register_blueprint(platos.bp)
+
+
+    from . import historial
+    app.register_blueprint(historial.bp)
 
     return app
