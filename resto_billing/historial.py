@@ -94,8 +94,6 @@ def cerrarCuenta(mesa):
         WHERE id_mesa=%s;"""
         cursor.execute(sqlBorrar, (mesa, ))
         horaCierra = datetime.now()
-        print('---------------')
-        print('pedidos = ', pedidos)
         datosVenta = (mesa, horaAbre, horaCierra, pedidos, suma)
         sqlventa = """INSERT INTO ventas
         (mesa, hora_abre, hora_cierra, consumo, total)
