@@ -186,27 +186,27 @@ def platos(id_mesa):
 #         return redirect('/')
 
 
-@app.route('/destroyCategoria/<int:id>')
-def destroyCategoria(id):
-    """Borrado de categoria por ID"""
+# @app.route('/destroyCategoria/<int:id>')
+# def destroyCategoria(id):
+#     """Borrado de categoria por ID"""
 
-    if 'username' in session:
-        conn = mysql.connect()
-        cursor = conn.cursor()
-        sql1 = """SELECT `id_plato` FROM `my_resto`.`platos`
-            WHERE `id_categoria` LIKE %s"""
-        cursor.execute(sql1, id)
-        platos = cursor.fetchall()
-        sql2 = """UPDATE `my_resto`.`platos` SET `id_categoria`=1
-            WHERE id_plato=%s"""
-        for plato in platos:
-            cursor.execute(sql2, plato[0])
-        sql3 = "DELETE FROM `my_resto`.`categorias` WHERE id_categoria=%s"
-        cursor.execute(sql3, (id))
-        conn.commit()
-        return redirect('/administracion')
-    else:
-        return redirect('/')
+#     if 'username' in session:
+#         conn = mysql.connect()
+#         cursor = conn.cursor()
+#         sql1 = """SELECT `id_plato` FROM `my_resto`.`platos`
+#             WHERE `id_categoria` LIKE %s"""
+#         cursor.execute(sql1, id)
+#         platos = cursor.fetchall()
+#         sql2 = """UPDATE `my_resto`.`platos` SET `id_categoria`=1
+#             WHERE id_plato=%s"""
+#         for plato in platos:
+#             cursor.execute(sql2, plato[0])
+#         sql3 = "DELETE FROM `my_resto`.`categorias` WHERE id_categoria=%s"
+#         cursor.execute(sql3, (id))
+#         conn.commit()
+#         return redirect('/administracion')
+#     else:
+#         return redirect('/')
 
 
 # @app.route('/edit/<int:id>')  # Recibe como parámetro el id del plato

@@ -137,3 +137,26 @@ def destroy(id):
         return redirect('/administracion')
     else:
         return redirect('/')
+
+
+@bp.route('/destroyCategoria/<int:id>')
+def destroyCategoria(id):
+    """Borrado de categoria por ID"""
+
+    if 'username' in session:
+        conn = database.connect()
+        cursor = conn.cursor()
+        sql1 = """SELECT id_plato FROM platos
+            WHERE id_categoria=%s"""
+        cursor.execute(sql1, (id, ))
+        platos = cursor.fetchall()
+        sql2 = """UPDATE platos SET id_categoria=1
+            WHERE id_plato=%s"""
+        for plato in platos:
+            cursor.execute(sql2, plato[0])
+        sql3 = "DELETE FROM categorias WHERE id_categoria=%s"
+        cursor.execute(sql3, (id, ))
+        conn.commit()
+        return redirect('/administracion')
+    else:
+        return redirect('/')
