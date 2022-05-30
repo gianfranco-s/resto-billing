@@ -34,9 +34,9 @@ database.create_admin_user(mysql, app.secret_key)
 database.define_default_category(mysql)
 
 
-@app.route('/')
-def login():
-    return render_template('/index.html')
+# @app.route('/')
+# def login():
+#     return render_template('/index.html')
 
 
 @app.route('/ingresar', methods=['POST'])

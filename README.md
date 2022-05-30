@@ -1,3 +1,20 @@
+This repo is forked from https://github.com/guillermo-k/App_restaurant
+
+## If using PostgreSQL
+Create  database (after installing, of course):
+```
+sudo service postgresql start
+sudo -u postgres psql -c "create role resto_billing with password 'resto_billing'"
+sudo -u postgres psql -c "ALTER ROLE resto_billing WITH LOGIN;"
+sudo -u postgres psql -c 'CREATE DATABASE my_resto WITH OWNER resto_billing'
+```
+
+Run the project:
+``` 
+export FLASK_APP=resto_billing; export FLASK_ENV=development; flask run
+```
+
+
 # Aplicación para administración de un restaurante
 
 ## Librerías y dependencias

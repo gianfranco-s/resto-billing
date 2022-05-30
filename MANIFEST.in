@@ -1,0 +1,4 @@
+include resto_billing/schema.sql
+graft resto_billing/static
+graft resto_billing/templates
+global-exclude *.pyc

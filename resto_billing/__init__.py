@@ -1,5 +1,4 @@
 import os
-
 from flask import Flask
 
 
@@ -23,10 +22,23 @@ def create_app(test_config=None):
         os.makedirs(app.instance_path)
     except OSError:
         pass
+    
+    from . import database
+    app.register_blueprint(database.bp)
+    
+    # For MySQL connections:
+    app.secret_key = '123Prueba!'
+    app.config['MYSQL_DATABASE_HOST'] = 'localhost'
+    app.config['MYSQL_DATABASE_USER'] = 'root'
+    app.config['MYSQL_DATABASE_PASSWORD'] = ''
 
-    # a simple page that says hello
-    @app.route('/hello')
-    def hello():
-        return 'Hello, World!'
+    # For PostgreSQL connections
+    
+    database.create_tables()
+    database.create_admin_user(app.secret_key)
+    database.define_default_category()
+
+    from . import start
+    app.register_blueprint(start.bp)
 
     return app
