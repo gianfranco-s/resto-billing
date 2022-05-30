@@ -46,9 +46,10 @@ def ventas():
             mesa = 'Todas'
         fechasMinMax = (fechasMin, fechasMax)
         total = 0
+        print('ventas = ',ventas)
         for i in range(len(ventas)):
-            ventas[i] = list(ventas[i])
-            ventas[i][4] = (ventas[i][4][1:-1]).split(',')
+            ventas[i] = list(ventas[i]) # ventas[i] era una tupla
+            # ventas[i][4] = (ventas[i][4][1:-1]).split(',')  # ventas[i][4] contiene el pedido de la mesa
             total += ventas[i][5]
         conn.commit()
         return render_template('ventas.html',
