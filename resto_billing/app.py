@@ -2,7 +2,7 @@ import json
 import cryptocode
 import os
 
-from datetime import datetime
+# from datetime import datetime
 from flask import (flash,
                    Flask,
                    make_response,
@@ -20,18 +20,18 @@ app.secret_key = '123Prueba!'
 # app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 # app.config['MYSQL_DATABASE_USER'] = 'root'
 # app.config['MYSQL_DATABASE_PASSWORD'] = ''
-app.config['CARPETA'] = os.path.join('fotos')
+# app.config['CARPETA'] = os.path.join('fotos')
 # app.config['CANTIDAD_DE_MESAS'] = int()
 
 
-mysql = MySQL()
-mysql.init_app(app)
-conn = mysql.connect()
-cursor = conn.cursor()
+# mysql = MySQL()
+# mysql.init_app(app)
+# conn = mysql.connect()
+# cursor = conn.cursor()
 
-database.create(mysql)
-database.create_admin_user(mysql, app.secret_key)
-database.define_default_category(mysql)
+# database.create(mysql)
+# database.create_admin_user(mysql, app.secret_key)
+# database.define_default_category(mysql)
 
 
 # @app.route('/')
@@ -39,30 +39,30 @@ database.define_default_category(mysql)
 #     return render_template('/index.html')
 
 
-@app.route('/ingresar', methods=['POST'])
-def ingresar():
-    nombre = request.form['txtUsuario']
-    password = request.form['txtPassword']
-    sql = "SELECT * FROM `my_resto`.`usuarios` WHERE `usuario` LIKE %s"
-    conn = mysql.connect()
-    cursor = conn.cursor()
-    cursor.execute(sql, nombre)
-    global usuario
-    usuario = cursor.fetchall()
-    conn.commit()
-    if usuario != ():
-        clave2 = cryptocode.decrypt(usuario[0][1], app.secret_key)
-        if password == clave2:
-            session['username'] = usuario[0][0]
-            if usuario[0][2]:
-                session['super'] = usuario[0][2]
-            return redirect('/mesas')
-        else:
-            flash('Usuario o contraseña erroneos')
-            return redirect('/')
-    else:
-        flash('Usuario o contraseña erroneos')
-        return redirect('/')
+# @app.route('/ingresar', methods=['POST'])
+# def ingresar():
+#     nombre = request.form['txtUsuario']
+#     password = request.form['txtPassword']
+#     sql = "SELECT * FROM `my_resto`.`usuarios` WHERE `usuario` LIKE %s"
+#     conn = mysql.connect()
+#     cursor = conn.cursor()
+#     cursor.execute(sql, nombre)
+#     global usuario
+#     usuario = cursor.fetchall()
+#     conn.commit()
+#     if usuario != ():
+#         clave2 = cryptocode.decrypt(usuario[0][1], app.secret_key)
+#         if password == clave2:
+#             session['username'] = usuario[0][0]
+#             if usuario[0][2]:
+#                 session['super'] = usuario[0][2]
+#             return redirect('/mesas')
+#         else:
+#             flash('Usuario o contraseña erroneos')
+#             return redirect('/')
+#     else:
+#         flash('Usuario o contraseña erroneos')
+#         return redirect('/')
 
 
 # @app.route('/mesas/')
@@ -167,23 +167,23 @@ def platos(id_mesa):
 #         return redirect('/')
 
 
-@app.route('/destroy/<int:id>')  # Recibe como parámetro el id del producto
-def destroy(id):
-    """Borrado de plato por ID"""
+# @app.route('/destroy/<int:id>')  # Recibe como parámetro el id del producto
+# def destroy(id):
+#     """Borrado de plato por ID"""
 
-    if 'username' in session:
-        conn = mysql.connect()
-        cursor = conn.cursor()
-        cursor.execute("""SELECT foto FROM `my_resto`.`platos`
-        WHERE id_plato=%s""", id)
-        fila = cursor.fetchone()[0]
-        borrar_foto(fila)
-        sql = "DELETE FROM `my_resto`.`platos` WHERE id_plato=%s"
-        cursor.execute(sql, (id))
-        conn.commit()
-        return redirect('/administracion')
-    else:
-        return redirect('/')
+#     if 'username' in session:
+#         conn = mysql.connect()
+#         cursor = conn.cursor()
+#         cursor.execute("""SELECT foto FROM `my_resto`.`platos`
+#         WHERE id_plato=%s""", id)
+#         fila = cursor.fetchone()[0]
+#         borrar_foto(fila)
+#         sql = "DELETE FROM `my_resto`.`platos` WHERE id_plato=%s"
+#         cursor.execute(sql, (id))
+#         conn.commit()
+#         return redirect('/administracion')
+#     else:
+#         return redirect('/')
 
 
 @app.route('/destroyCategoria/<int:id>')
@@ -209,111 +209,111 @@ def destroyCategoria(id):
         return redirect('/')
 
 
-@app.route('/edit/<int:id>')  # Recibe como parámetro el id del plato
-def edit(id):
-    """Formulario para editar el plato"""
+# @app.route('/edit/<int:id>')  # Recibe como parámetro el id del plato
+# def edit(id):
+#     """Formulario para editar el plato"""
 
-    if 'username' in session:
-        conn = mysql.connect()
-        cursor = conn.cursor()
-        sql = """SELECT* FROM `my_resto`.`platos`,
-                `my_resto`.`categorias` WHERE
-                `categorias`.`id_categoria`=`platos`.`id_categoria` AND
-                id_plato=%s"""
-        cursor.execute(sql, (id))
-        plato = list(cursor.fetchone())
-        cursor.execute("SELECT* FROM `my_resto`.`categorias`;")
-        categorias = cursor.fetchall()
-        conn.commit()
-        return render_template('edit.html', plato=plato,
-                               categorias=categorias)
-    else:
-        return redirect('/')
-
-
-@app.route('/update', methods=['POST'])
-@app.route('/update/<int:id_plato>', methods=['POST'])
-def update(id_plato=None):
-    """Platos
-    Alta y modificaciones
-    """
-
-    if 'username' in session:
-        conn = mysql.connect()
-        cursor = conn.cursor()
-        nombre = request.form['txtNombre'].capitalize().replace(' ', '_')
-        descripcion_plato = request.form['txtDescripcionPlato'].capitalize()
-        precio = float(request.form['txtPrecio'])
-        foto = request.files['txtFoto']
-        categoria = request.form['txtCategoria']
-        now = datetime.now()
-        tiempo = now.strftime('%Y%H%M%S_')
-        extension = foto.filename.split('.')
-        if foto.filename != '':
-            nuevoNombreFoto = tiempo+nombre+'.'+extension[1]
-            foto.save('App_restaurant/fotos/'+nuevoNombreFoto)
-            if id_plato:
-                sql = 'SELECT foto FROM `my_resto`.`platos` WHERE id_plato=%s'
-                cursor.execute(sql, id_plato)
-                fotoVieja = cursor.fetchall()[0][0]
-                borrar_foto(fotoVieja)
-        else:
-            nuevoNombreFoto = request.form['viejoNombreFoto']
-            if nuevoNombreFoto == '':
-                nuevoNombreFoto = 'Sin foto'
-        dato = [nombre, descripcion_plato, precio, nuevoNombreFoto, categoria]
-        if id_plato:
-            dato.append(id_plato)
-            sql = """UPDATE `my_resto`.`platos`
-            SET `nombre`=%s,
-            `descripcion_plato`=%s,
-            `precio`=%s,
-            `foto`=%s,
-            `id_categoria`=%s
-            WHERE id_plato=%s"""
-        else:
-            sql = """INSERT `my_resto`.`platos`
-            (`nombre`,`descripcion_plato`, `precio`, `foto`,`id_categoria`)
-            VALUES(%s,%s,%s,%s,%s)"""
-        cursor.execute(sql, dato)
-        conn.commit()
-        return redirect('/administracion')
-    else:
-        return redirect('/')
+#     if 'username' in session:
+#         conn = mysql.connect()
+#         cursor = conn.cursor()
+#         sql = """SELECT* FROM `my_resto`.`platos`,
+#                 `my_resto`.`categorias` WHERE
+#                 `categorias`.`id_categoria`=`platos`.`id_categoria` AND
+#                 id_plato=%s"""
+#         cursor.execute(sql, (id))
+#         plato = list(cursor.fetchone())
+#         cursor.execute("SELECT* FROM `my_resto`.`categorias`;")
+#         categorias = cursor.fetchall()
+#         conn.commit()
+#         return render_template('edit.html', plato=plato,
+#                                categorias=categorias)
+#     else:
+#         return redirect('/')
 
 
-@app.route('/updateCategoria', methods=['POST'])
-@app.route('/updateCategoria/<int:id_categoria>', methods=['POST'])
-def updateCategoria(id_categoria=None):
-    """Categorias
-    Alta y modificaciones
-    """
+# @app.route('/update', methods=['POST'])
+# @app.route('/update/<int:id_plato>', methods=['POST'])
+# def update(id_plato=None):
+#     """Platos
+#     Alta y modificaciones
+#     """
 
-    if 'username' in session:
-        conn = mysql.connect()
-        cursor = conn.cursor()
-        cat = request.form['txtCategoria'].capitalize().replace(' ', '_')
-        datos = [cat]
-        if id_categoria:
-            datos.append(id_categoria)
-            sql = """UPDATE `my_resto`.`categorias`
-            SET `categoria`=%s
-            WHERE id_categoria=%s"""
-        else:
-            sql = """INSERT `my_resto`.`categorias`
-            (`categoria`)
-            VALUES(%s)"""
-        cursor.execute(sql, datos)
-        conn.commit()
-        return redirect('/administracion')
-    else:
-        return redirect('/')
+#     if 'username' in session:
+#         conn = mysql.connect()
+#         cursor = conn.cursor()
+#         nombre = request.form['txtNombre'].capitalize().replace(' ', '_')
+#         descripcion_plato = request.form['txtDescripcionPlato'].capitalize()
+#         precio = float(request.form['txtPrecio'])
+#         foto = request.files['txtFoto']
+#         categoria = request.form['txtCategoria']
+#         now = datetime.now()
+#         tiempo = now.strftime('%Y%H%M%S_')
+#         extension = foto.filename.split('.')
+#         if foto.filename != '':
+#             nuevoNombreFoto = tiempo+nombre+'.'+extension[1]
+#             foto.save('App_restaurant/fotos/'+nuevoNombreFoto)
+#             if id_plato:
+#                 sql = 'SELECT foto FROM `my_resto`.`platos` WHERE id_plato=%s'
+#                 cursor.execute(sql, id_plato)
+#                 fotoVieja = cursor.fetchall()[0][0]
+#                 borrar_foto(fotoVieja)
+#         else:
+#             nuevoNombreFoto = request.form['viejoNombreFoto']
+#             if nuevoNombreFoto == '':
+#                 nuevoNombreFoto = 'Sin foto'
+#         dato = [nombre, descripcion_plato, precio, nuevoNombreFoto, categoria]
+#         if id_plato:
+#             dato.append(id_plato)
+#             sql = """UPDATE `my_resto`.`platos`
+#             SET `nombre`=%s,
+#             `descripcion_plato`=%s,
+#             `precio`=%s,
+#             `foto`=%s,
+#             `id_categoria`=%s
+#             WHERE id_plato=%s"""
+#         else:
+#             sql = """INSERT `my_resto`.`platos`
+#             (`nombre`,`descripcion_plato`, `precio`, `foto`,`id_categoria`)
+#             VALUES(%s,%s,%s,%s,%s)"""
+#         cursor.execute(sql, dato)
+#         conn.commit()
+#         return redirect('/administracion')
+#     else:
+#         return redirect('/')
 
 
-@app.route('/fotos/<nombreFoto>')
-def uploads(nombreFoto):
-    """Guardado de las fotos en la carpeta correspondiente"""
-    return send_from_directory(app.config['CARPETA'], nombreFoto)
+# @app.route('/updateCategoria', methods=['POST'])
+# @app.route('/updateCategoria/<int:id_categoria>', methods=['POST'])
+# def updateCategoria(id_categoria=None):
+#     """Categorias
+#     Alta y modificaciones
+#     """
+
+#     if 'username' in session:
+#         conn = mysql.connect()
+#         cursor = conn.cursor()
+#         cat = request.form['txtCategoria'].capitalize().replace(' ', '_')
+#         datos = [cat]
+#         if id_categoria:
+#             datos.append(id_categoria)
+#             sql = """UPDATE `my_resto`.`categorias`
+#             SET `categoria`=%s
+#             WHERE id_categoria=%s"""
+#         else:
+#             sql = """INSERT `my_resto`.`categorias`
+#             (`categoria`)
+#             VALUES(%s)"""
+#         cursor.execute(sql, datos)
+#         conn.commit()
+#         return redirect('/administracion')
+#     else:
+#         return redirect('/')
+
+
+# @app.route('/fotos/<nombreFoto>')
+# def uploads(nombreFoto):
+#     """Guardado de las fotos en la carpeta correspondiente"""
+#     return send_from_directory(app.config['CARPETA'], nombreFoto)
 
 
 @app.route('/crear_usuario/', methods=['POST'])
@@ -532,12 +532,12 @@ def seleccionmesas():
     return redirect('/mesas')
 
 
-def borrar_foto(nombre):
-    """Borra la foto de 'App_restaurant/fotos' pasada por parametro"""
-    try:
-        os.remove('App_restaurant/fotos/' + nombre)
-    except FileNotFoundError:
-        print('Archivo no encontrado')
+# def borrar_foto(nombre):
+#     """Borra la foto de 'App_restaurant/fotos' pasada por parametro"""
+#     try:
+#         os.remove('App_restaurant/fotos/' + nombre)
+#     except FileNotFoundError:
+#         print('Archivo no encontrado')
 
 
 if __name__ == '__main__':
