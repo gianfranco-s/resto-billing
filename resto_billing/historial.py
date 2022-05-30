@@ -1,3 +1,5 @@
+import json
+
 from flask import Blueprint, session, request, render_template, redirect, flash
 from . import database
 from datetime import datetime
@@ -57,3 +59,50 @@ def ventas():
                                mesa=mesa)
     flash('Usuario no autorizado a ver el historial')
     return redirect('/mesas')
+
+
+@bp.route('/cerrar_cuenta/<int:mesa>/')
+def cerrarCuenta(mesa):
+    """Cerrar la cuenta de la mesa"""
+
+    conn = database.connect()
+    cursor = conn.cursor()
+    sql = """SELECT pedidos, hora_abre FROM mesas
+    WHERE id_mesa = %s"""
+    cursor.execute(sql, (mesa, ))
+    extracto = cursor.fetchall()[0]
+    pedidos, horaAbre = extracto
+    # pedidosBorrar = json.loads(pedidos)
+    pedidosBorrar = pedidos
+    pedidos = json.dumps(pedidos)
+    resumen = []
+    suma = 0
+    if type(pedidosBorrar) == dict:
+        for key in pedidosBorrar:
+            cant = pedidosBorrar[key]
+            sql2 = """SELECT precio FROM platos
+                WHERE nombre = %s;"""
+            cursor.execute(sql2, (key, ))  # Buscamos el precio unitario del plato
+            precio = int(cursor.fetchone()[0])  # Almacenamos el precio
+            monto = precio*cant
+            suma += monto
+            plato = (key, cant, monto)
+            resumen.append(plato)
+        resumen.append(suma)
+        sqlBorrar = """UPDATE mesas
+        SET pedidos=NULL, hora_abre=NULL
+        WHERE id_mesa=%s;"""
+        cursor.execute(sqlBorrar, (mesa, ))
+        horaCierra = datetime.now()
+        print('---------------')
+        print('pedidos = ', pedidos)
+        datosVenta = (mesa, horaAbre, horaCierra, pedidos, suma)
+        sqlventa = """INSERT INTO ventas
+        (mesa, hora_abre, hora_cierra, consumo, total)
+        VALUES(%s, %s, %s, %s, %s);"""
+        cursor.execute(sqlventa, datosVenta)
+        conn.commit()
+        return render_template('/resumen.html', resumen=resumen)
+    else:
+        flash('La mesa no contenia ningun pedido')
+        return redirect('/mesas')
