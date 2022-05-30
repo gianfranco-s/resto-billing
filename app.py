@@ -1,68 +1,37 @@
 import json
-import os
 import cryptocode
+import os
 
 from datetime import datetime
-from flask import Flask, redirect, render_template, request, session, flash, send_from_directory
+from flask import (flash,
+                   Flask,
+                   make_response,
+                   redirect,
+                   render_template,
+                   request, session,
+                   send_from_directory,)
 from flaskext.mysql import MySQL
 
-cantidad_mesas = 3
+import database
 
 app = Flask(__name__)
 
 app.secret_key = '123Prueba!'
-mysql = MySQL()
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 app.config['MYSQL_DATABASE_USER'] = 'root'
 app.config['MYSQL_DATABASE_PASSWORD'] = ''
+app.config['CARPETA'] = os.path.join('fotos')
+app.config['CANTIDAD_DE_MESAS'] = int()
 
 
+mysql = MySQL()
 mysql.init_app(app)
-CARPETA = os.path.join('fotos')
-app.config['CARPETA'] = CARPETA
-
 conn = mysql.connect()
 cursor = conn.cursor()
-cursor.execute("CREATE DATABASE IF NOT EXISTS `my_resto`;")
 
-cursor.execute("""CREATE TABLE IF NOT EXISTS `my_resto`.`platos` (
-    `id_plato` INT(10) NOT NULL AUTO_INCREMENT,
-    `nombre` VARCHAR(255) NOT NULL ,
-    `descripcion_plato` VARCHAR(5000) NOT NULL ,
-    `precio` FLOAT NOT NULL ,
-    `foto` VARCHAR(5000) NOT NULL,
-    PRIMARY KEY (`id_plato`) );""")
-
-cursor.execute("""CREATE TABLE IF NOT EXISTS `my_resto`.`mesas` (
-    `id_mesa` INT(10) NOT NULL AUTO_INCREMENT,
-    `pedidos` JSON DEFAULT ('{ }'),
-    `hora_abre` DATETIME,
-    PRIMARY KEY (`id_mesa`));""")
-
-cursor.execute("""CREATE TABLE IF NOT EXISTS `my_resto`.`usuarios`(
-    `usuario` VARCHAR(255) NOT NULL,
-    `password` VARCHAR(500) NOT NULL,
-    `super_usuario` BOOLEAN NULL DEFAULT FALSE,
-    PRIMARY KEY (`usuario`))""")
-
-cursor.execute("""CREATE TABLE IF NOT EXISTS `my_resto`.`ventas`(
-    `id_venta` INT(20) NOT NULL AUTO_INCREMENT,
-    `mesa`INT(10),
-    `hora_abre` DATETIME ,
-    `hora_cierra` DATETIME,
-    `consumo` JSON NOT NULL DEFAULT ('{ }'),
-    `total` INT(10),
-    PRIMARY KEY (`id_venta`));""")
-
-cursor.execute("SELECT count(*) FROM `my_resto`.`usuarios`")
-cantidadDeUsuarios = cursor.fetchone()[0]
-
-if cantidadDeUsuarios == 0:
-    clave = cryptocode.encrypt('admin', app.secret_key)
-    cursor.execute("""INSERT `my_resto`.`usuarios`(
-        `usuario`,`password`,`super_usuario`)
-        VALUES ('admin', %s, 1);""", (clave))
-conn.commit()
+database.create(mysql)
+database.create_admin_user(mysql, app.secret_key)
+database.define_default_category(mysql)
 
 
 @app.route('/')
@@ -87,8 +56,6 @@ def ingresar():
             session['username'] = usuario[0][0]
             if usuario[0][2]:
                 session['super'] = usuario[0][2]
-            global cantidad_mesas
-            cantidad_mesas = int(request.form['cantidad_mesas'])
             return redirect('/mesas')
         else:
             flash('Usuario o contraseña erroneos')
@@ -102,30 +69,43 @@ def ingresar():
 def mesas():
     """Listado de mesas, carga de pedidos por mesa, y cierre de mesa"""
 
+    cookie = request.cookies.get('mesas')
+    if cookie:
+        app.config['CANTIDAD_DE_MESAS'] = int(cookie)
+
     if 'username' in session:
         conn = mysql.connect()
         cursor = conn.cursor()
         cursor.execute("SELECT `id_mesa`,`pedidos` FROM `my_resto`.`mesas`")
-        mesas = cursor.fetchall()
-        mesas = list(mesas)
-        for indexMesa in range(len(mesas)):
+        mesas_backend = cursor.fetchall()
+        mesas = list()
+        for mesa in mesas_backend:
+            nro_de_mesa = mesa[0]
+            pedido = mesa[1]
             suma = 0
-            mesas[indexMesa] = list(mesas[indexMesa])
-            mesas[indexMesa][1] = (str(mesas[indexMesa][1])[1:-1]).split(',')
-            for indicePedido in range(len(mesas[indexMesa][1])):
-                plato = mesas[indexMesa][1][indicePedido].split(': ')
-                cursor.execute("""SELECT `precio` FROM `my_resto`.`platos`
-                WHERE `nombre` LIKE %s;""", (plato[0].strip()[1:-1]))
-                precio = cursor.fetchall()
-                if len(mesas[indexMesa][1][indicePedido]) > 3:
-                    i = mesas[indexMesa][1]
-                    i[indicePedido] = (
-                        i[indicePedido], precio[0][0]*int(plato[1]))
-                    suma += precio[0][0]*int(plato[1])
-                else:
-                    mesas[indexMesa][1][indicePedido] = ['Sin pedidos', 0]
-            mesas[indexMesa].append(suma)
-        mesas = mesas[:cantidad_mesas]
+            subtotales = list()
+            if pedido:
+                pedido = json.loads(pedido)  # mesa[1] trae un json
+                for plato, cantidad in pedido.items():
+                    cursor.execute("""SELECT `precio` FROM `my_resto`.`platos`
+                                   WHERE `nombre` LIKE %s;""", (plato))
+                    precio_unitario = cursor.fetchone()[0]
+                    subtotal_por_plato = precio_unitario * int(cantidad)
+                    subtotales.append((f'{plato}: {cantidad}',
+                                       subtotal_por_plato))
+                    suma += subtotal_por_plato
+            else:
+                subtotales.append(['Sin pedidos', 0])
+            mesas.append([nro_de_mesa, subtotales, suma])
+
+        # Acotamos la cantidad de mesas al número indicado por el usuario
+        mesas = mesas[:app.config['CANTIDAD_DE_MESAS']]
+        # mesas: (list of lists)
+        # mesas[0]: (list)
+        #     mesas[0][0]: (int) número de mesa
+        #     mesas[0][1]: (tuple) pedido
+        #     mesas[0][1][0]: (str) item (agua, fideos, etc)
+        #     mesas[0][1][1]: (float) subtotal
         return render_template('/mesas.html', mesas=mesas)
     else:
         flash('Debe registrarse antes')
@@ -167,13 +147,22 @@ def administracion():
     if 'username' in session:
         conn = mysql.connect()
         cursor = conn.cursor()
-        cursor.execute("SELECT* FROM `my_resto`.`platos`;")
+        cursor.execute("""SELECT* FROM `my_resto`.`platos`,
+                            `my_resto`.`categorias` WHERE
+                            `categorias`.`id_categoria`=
+                            `platos`.`id_categoria`
+                            ORDER BY `categoria`;""")
         platos = cursor.fetchall()
+        cursor.execute("SELECT* FROM `my_resto`.`categorias`;")
+        categorias = cursor.fetchall()
         conn.commit()
         """Renderizamos administracion.html
         pasando el menu y la cantidad de mesas seleccionadas"""
         return render_template(
-                'administracion.html', platos=platos, cantidad=cantidad_mesas)
+                'administracion.html',
+                platos=platos,
+                cantidad=app.config['CANTIDAD_DE_MESAS'],
+                categorias=categorias)
     else:
         return redirect('/')
 
@@ -181,15 +170,39 @@ def administracion():
 @app.route('/destroy/<int:id>')  # Recibe como parámetro el id del producto
 def destroy(id):
     """Borrado de plato por ID"""
+
     if 'username' in session:
         conn = mysql.connect()
         cursor = conn.cursor()
         cursor.execute("""SELECT foto FROM `my_resto`.`platos`
         WHERE id_plato=%s""", id)
-        fila = cursor.fetchall()
-        borrarFoto(fila[0][0])
+        fila = cursor.fetchone()[0]
+        borrar_foto(fila)
         sql = "DELETE FROM `my_resto`.`platos` WHERE id_plato=%s"
         cursor.execute(sql, (id))
+        conn.commit()
+        return redirect('/administracion')
+    else:
+        return redirect('/')
+
+
+@app.route('/destroyCategoria/<int:id>')
+def destroyCategoria(id):
+    """Borrado de categoria por ID"""
+
+    if 'username' in session:
+        conn = mysql.connect()
+        cursor = conn.cursor()
+        sql1 = """SELECT `id_plato` FROM `my_resto`.`platos`
+            WHERE `id_categoria` LIKE %s"""
+        cursor.execute(sql1, id)
+        platos = cursor.fetchall()
+        sql2 = """UPDATE `my_resto`.`platos` SET `id_categoria`=1
+            WHERE id_plato=%s"""
+        for plato in platos:
+            cursor.execute(sql2, plato[0])
+        sql3 = "DELETE FROM `my_resto`.`categorias` WHERE id_categoria=%s"
+        cursor.execute(sql3, (id))
         conn.commit()
         return redirect('/administracion')
     else:
@@ -203,11 +216,17 @@ def edit(id):
     if 'username' in session:
         conn = mysql.connect()
         cursor = conn.cursor()
-        sql = "SELECT * FROM `my_resto`.`platos` WHERE id_plato=%s"
+        sql = """SELECT* FROM `my_resto`.`platos`,
+                `my_resto`.`categorias` WHERE
+                `categorias`.`id_categoria`=`platos`.`id_categoria` AND
+                id_plato=%s"""
         cursor.execute(sql, (id))
         plato = list(cursor.fetchone())
+        cursor.execute("SELECT* FROM `my_resto`.`categorias`;")
+        categorias = cursor.fetchall()
         conn.commit()
-        return render_template('edit.html', plato=plato)
+        return render_template('edit.html', plato=plato,
+                               categorias=categorias)
     else:
         return redirect('/')
 
@@ -226,34 +245,64 @@ def update(id_plato=None):
         descripcion_plato = request.form['txtDescripcionPlato'].capitalize()
         precio = float(request.form['txtPrecio'])
         foto = request.files['txtFoto']
+        categoria = request.form['txtCategoria']
         now = datetime.now()
         tiempo = now.strftime('%Y%H%M%S_')
         extension = foto.filename.split('.')
         if foto.filename != '':
             nuevoNombreFoto = tiempo+nombre+'.'+extension[1]
             foto.save('App_restaurant/fotos/'+nuevoNombreFoto)
-            if id_plato is not None:
+            if id_plato:
                 sql = 'SELECT foto FROM `my_resto`.`platos` WHERE id_plato=%s'
                 cursor.execute(sql, id_plato)
                 fotoVieja = cursor.fetchall()[0][0]
-                borrarFoto(fotoVieja)
+                borrar_foto(fotoVieja)
         else:
             nuevoNombreFoto = request.form['viejoNombreFoto']
             if nuevoNombreFoto == '':
                 nuevoNombreFoto = 'Sin foto'
-        datos = [nombre, descripcion_plato, precio, nuevoNombreFoto]
-        if id_plato is not None:
-            datos.append(id_plato)
+        dato = [nombre, descripcion_plato, precio, nuevoNombreFoto, categoria]
+        if id_plato:
+            dato.append(id_plato)
             sql = """UPDATE `my_resto`.`platos`
             SET `nombre`=%s,
             `descripcion_plato`=%s,
             `precio`=%s,
-            `foto`=%s
+            `foto`=%s,
+            `id_categoria`=%s
             WHERE id_plato=%s"""
         else:
             sql = """INSERT `my_resto`.`platos`
-            (`nombre`,`descripcion_plato`, `precio`, `foto`)
-            VALUES(%s,%s,%s,%s)"""
+            (`nombre`,`descripcion_plato`, `precio`, `foto`,`id_categoria`)
+            VALUES(%s,%s,%s,%s,%s)"""
+        cursor.execute(sql, dato)
+        conn.commit()
+        return redirect('/administracion')
+    else:
+        return redirect('/')
+
+
+@app.route('/updateCategoria', methods=['POST'])
+@app.route('/updateCategoria/<int:id_categoria>', methods=['POST'])
+def updateCategoria(id_categoria=None):
+    """Categorias
+    Alta y modificaciones
+    """
+
+    if 'username' in session:
+        conn = mysql.connect()
+        cursor = conn.cursor()
+        cat = request.form['txtCategoria'].capitalize().replace(' ', '_')
+        datos = [cat]
+        if id_categoria:
+            datos.append(id_categoria)
+            sql = """UPDATE `my_resto`.`categorias`
+            SET `categoria`=%s
+            WHERE id_categoria=%s"""
+        else:
+            sql = """INSERT `my_resto`.`categorias`
+            (`categoria`)
+            VALUES(%s)"""
         cursor.execute(sql, datos)
         conn.commit()
         return redirect('/administracion')
@@ -334,7 +383,7 @@ def cargarPedido(mesa):
     else:
         hora = datetime.now()
         datos = [hora, mesa]
-        sql = "UPDATE `my_resto`.`mesas`SET `hora_abre`=%s WHERE `id_mesa`=%s;"
+        sql = "UPDATE `my_resto`.`mesas`SET`hora_abre`=%s WHERE `id_mesa`=%s;"
         cursor.execute(sql, datos)
         pedidos = {}
     keysDB = pedidos.keys()
@@ -363,19 +412,20 @@ def cargarPedido(mesa):
 def cantidadMesas():
     """Cantidad de mesas del negocio"""
 
-    global cantidad_mesas
-    cantidad_mesas = int(request.form['cantidad_mesas'])
+    app.config['CANTIDAD_DE_MESAS'] = int(request.form['cantidad_mesas'])
     conn = mysql.connect()
     cursor = conn.cursor()
     cursor.execute("SELECT count(*) FROM `my_resto`.`mesas`")
     mesas = int(cursor.fetchone()[0])
     """Mientras que la cantidad de mesas existentes sea menor
     que la indicada por el usuario"""
-    while mesas < cantidad_mesas:
+    while mesas < app.config['CANTIDAD_DE_MESAS']:
         cursor.execute("INSERT `my_resto`.`mesas`(`pedidos`) VALUES(NULL)")
         mesas += 1
     conn.commit()
-    return redirect('/administracion')
+    respuesta = make_response(redirect('/administracion'))
+    respuesta.set_cookie('mesas', str(app.config['CANTIDAD_DE_MESAS']))
+    return respuesta
 
 
 @app.route('/cerrar_cuenta/<int:mesa>/')
@@ -421,34 +471,68 @@ def cerrarCuenta(mesa):
         return redirect('/mesas')
 
 
-@app.route('/ventas/')
+@app.route('/ventas/', methods=['GET'])
 def ventas():
     """Listado de todas las ventas históricas"""
 
     if 'super' in session:
+        desde = request.args.get('desde')
+        hasta = request.args.get('hasta')
+        mesa = request.args.get('mesa')
+        datos = [desde, hasta]
         conn = mysql.connect()
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM `my_resto`.`ventas`")
         ventas = list(cursor.fetchall())
+        if len(ventas) > 0:
+            fechasMin = (str((ventas[0][2]))).split(' ')[0]
+        else:
+            fechasMin = datetime.today().strftime('%Y-%m-%d')
+        fechasMax = datetime.today().strftime('%Y-%m-%d')
+        cursor.execute("SELECT count(*) FROM `my_resto`.`mesas`")
+        totalMesas = cursor.fetchone()[0]
+        listaMesas = []
+        for i in range(1, totalMesas+1):
+            listaMesas.append(i)
+        if desde and hasta:
+            sql = """SELECT * FROM `my_resto`.`ventas`
+            WHERE `hora_abre` BETWEEN %s AND %s"""
+            if mesa:
+                if mesa != 'Todas':
+                    sql += ' AND `mesa` LIKE %s'
+                    datos.append(int(mesa))
+            else:
+                mesa = 'Todas'
+            cursor.execute(sql, datos)
+            ventas = list(cursor.fetchall())
+            fechasMin = desde
+            fechasMax = hasta
+        else:
+            mesa = 'Todas'
+        fechasMinMax = (fechasMin, fechasMax)
         total = 0
         for i in range(len(ventas)):
             ventas[i] = list(ventas[i])
-            ventas[i][4] = ventas[i][4][1:-1].split(',')
+            ventas[i][4] = (ventas[i][4][1:-1]).split(',')
             total += ventas[i][5]
         conn.commit()
-        return render_template('ventas.html', ventas=ventas, total=total)
+        return render_template('ventas.html',
+                               ventas=ventas,
+                               total=total,
+                               fechasMinMax=fechasMinMax,
+                               listaMesas=listaMesas,
+                               mesa=mesa)
     flash('Usuario no autorizado a ver el historial')
     return redirect('/mesas')
 
 
 @app.route('/seleccion_mesas/')
 def seleccionmesas():
-    global cantidad_mesas
-    cantidad_mesas = int(request.form['cantidad_mesas'])
+    app.config['CANTIDAD_DE_MESAS'] = int(request.form['cantidad_mesas'])
     return redirect('/mesas')
 
 
-def borrarFoto(nombre):
+def borrar_foto(nombre):
     """Borra la foto de 'App_restaurant/fotos' pasada por parametro"""
     try:
         os.remove('App_restaurant/fotos/' + nombre)
@@ -459,3 +543,4 @@ def borrarFoto(nombre):
 if __name__ == '__main__':
     # DEBUG is SET to TRUE. CHANGE FOR PROD
     app.run(debug=True)
+
