@@ -15,29 +15,33 @@
         <div class="col-1 d-flex justify-content-center"></div>
     </div>
     {% for mesa in mesas %}
+    {# Please note: {{ mesa['nro_mesa'] }} == {{ loop.index }} #}
+    
     <div class="row my-2">
-        <div class="col-1 d-flex justify-content-center">{{mesa[0]}}</div>
+        <div class="col-1 d-flex justify-content-center">{{ mesa['nro_mesa'] }}</div>
         <div class="col-4 d-flex justify-content-center">
-            <div class="container mb-4"  id="{{mesa[0]}}" style="display: none;">
-                {% for item in mesa[1] %}
+            <div class="container mb-4"  id="{{ loop.index }}" style="display: none;">
+                {% for item in mesa['pedido']['plato'] %}
                 <div class="row">
-                    <div class="col-8">{{item[0]}}</div>
-                    <div class="col-4">$ {{item[1]}}</div>
+                    <div class="col-8">{{ mesa['pedido']['plato'][loop.index0] }}
+                        {{ mesa['pedido']['cantidad'][loop.index0] }}
+                    </div>
+                    <div class="col-4">$ {{ mesa['pedido']['subtotales'][loop.index0] }}</div>
                 </div>
                 {% endfor %}
             </div>
         </div>
         <div class="col-1">
-            <button onclick='ver("{{mesa[0]}}")' class="{{mesa[0]}} btn btn-outline-secondary">Ver</button>
+            <button onclick='ver("{{ loop.index }}")' class="{{ loop.index }} btn btn-outline-secondary">Ver</button>
         </div>
-        <div class="col-5 d-flex justify-content-center">$ {{mesa[2]}}</div>
+        <div class="col-5 d-flex justify-content-center">$ {{ mesa['total'] }}</div>
         <div class="col-1 d-flex justify-content-center">
-            <a href="../platos/{{mesa[0]}}">
+            <a href="../platos/{{ mesa['nro_mesa'] }}">
                 <i class="fa-solid fa-pen-to-square" data-bs-toggle="tooltip" title="Editar pedido"></i>
             </a>
 
-            {% if mesa[2] > 0 %}
-            <a href="/cerrar_cuenta/{{mesa[0]}}">
+            {% if mesa['total'] > 0 %}
+            <a href="/cerrar_cuenta/{{ mesa['nro_mesa'] }}">
                 <i class="fa-solid fa-cash-register" data-bs-toggle="tooltip" title="Cerrar mesa"></i>
             </a>
 
