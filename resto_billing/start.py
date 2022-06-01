@@ -13,23 +13,19 @@ def login():
 @bp.route('/ingresar', methods=['POST'])
 def ingresar():
     nombre = request.form['txtUsuario']
-    nombre = (nombre, )
     password = request.form['txtPassword']
+    sql = "SELECT * FROM `my_resto`.`usuarios` WHERE `usuario` LIKE %s"
     conn = database.connect()
     cursor = conn.cursor()
-
-    cursor.execute("SELECT * FROM usuarios WHERE usuario LIKE %s", nombre)
-    global usuario
-    usuario = cursor.fetchall()
-    current_app.config['USUARIO'] = usuario
+    cursor.execute(sql, nombre)
+    current_app.config['USUARIO'] = cursor.fetchone()
     conn.commit()
-
+    (usuario, clave, superusuario) = current_app.config['USUARIO']
     if usuario != ():
-        clave2 = cryptocode.decrypt(usuario[0][1], current_app.secret_key)
-        if password == clave2:
-            session['username'] = usuario[0][0]
-            if usuario[0][2]:
-                session['super'] = usuario[0][2]
+        if password == cryptocode.decrypt(clave, current_app.secret_key):
+            session['username'] = usuario
+            if superusuario:
+                session['super'] = superusuario
             return redirect('/mesas')
         else:
             flash('Usuario o contraseña erroneos')
@@ -84,6 +80,7 @@ def modificar_usuario():
         nuevoNombre = request.form['txtUsuario']
         nuevoPassword = request.form['txtPassword']
         nuevoPassword = cryptocode.encrypt(nuevoPassword, current_app.secret_key)
+        usuario = current_app.config['USUARIO']
         usuario1 = (nuevoNombre, nuevoPassword, usuario[0][0])
         sql = """UPDATE usuarios
         SET usuario= %s, password= %s WHERE usuario=%s;"""
