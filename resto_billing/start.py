@@ -12,16 +12,19 @@ def login():
 
 @bp.route('/ingresar', methods=['POST'])
 def ingresar():
+    usuario_backend = ()
+
     nombre = request.form['txtUsuario']
     password = request.form['txtPassword']
-    sql = "SELECT * FROM `my_resto`.`usuarios` WHERE `usuario` LIKE %s"
+    sql = "SELECT * FROM usuarios WHERE usuario = %s"
     conn = database.connect()
     cursor = conn.cursor()
-    cursor.execute(sql, nombre)
-    current_app.config['USUARIO'] = cursor.fetchone()
+    cursor.execute(sql, (nombre, ))
+    usuario_backend = cursor.fetchone()
     conn.commit()
-    (usuario, clave, superusuario) = current_app.config['USUARIO']
-    if usuario != ():
+    
+    if usuario_backend:
+        usuario, clave, superusuario = usuario_backend
         if password == cryptocode.decrypt(clave, current_app.secret_key):
             session['username'] = usuario
             if superusuario:
@@ -47,22 +50,20 @@ def crear_usuario():
     """Creacion de nuevo usuario. Requiere ser super usuario"""
 
     if 'super' in session:
-        nuevoUsuario = request.form['txtUsuario']
-        nuevoPassword = request.form['txtPassword']
+        nuevo_usuario = request.form['txtUsuario']
+        nuevo_password = cryptocode.encrypt(request.form['txtPassword'], 
+                                            current_app.secret_key)
         super = request.form.get('superUsuario')
-        nuevoPassword = cryptocode.encrypt(nuevoPassword, current_app.secret_key)
-        usuario1 = nuevoUsuario, nuevoPassword, super
+        datos_usuario = nuevo_usuario, nuevo_password, super
         sql = """INSERT INTO usuarios(
             usuario, password, super_usuario) VALUES (%s, %s,%s)"""
         conn = database.connect()
         cursor = conn.cursor()
-        cursor.execute("SELECT usuario FROM usuarios;")
-        usuarios1 = cursor.fetchall()
-        usuarios = []
-        for usuarioj in usuarios1:
-            usuarios.append(usuarioj[0])
-        if nuevoUsuario not in usuarios:
-            cursor.execute(sql, usuario1)
+        cursor.execute("SELECT usuario FROM usuarios ;")
+        usuarios_backend = cursor.fetchall()
+        usuarios_registrados = set(i[0] for i in usuarios_backend)
+        if nuevo_usuario not in usuarios_registrados:
+            cursor.execute(sql, datos_usuario)
         else:
             flash('Nombre de usuario no disponible')
         conn.commit()
@@ -77,19 +78,21 @@ def modificar_usuario():
     """Edicion datos usuario (propios)"""
 
     if 'username' in session:
-        nuevoNombre = request.form['txtUsuario']
-        nuevoPassword = request.form['txtPassword']
-        nuevoPassword = cryptocode.encrypt(nuevoPassword, current_app.secret_key)
-        usuario = current_app.config['USUARIO']
-        usuario1 = (nuevoNombre, nuevoPassword, usuario[0][0])
+        nuevo_nombre = request.form['txtUsuario']
+        nuevo_password = request.form['txtPassword']
+        nuevo_password = cryptocode.encrypt(nuevo_password, current_app.secret_key)
+        usuario_modificado = nuevo_nombre, nuevo_password, session['username']
         sql = """UPDATE usuarios
         SET usuario= %s, password= %s WHERE usuario=%s;"""
         conn = database.connect()
         cursor = conn.cursor()
         cursor.execute("SELECT usuario FROM usuarios;")
-        usuarios = cursor.fetchall()  # Almacenamos los datos en una tupla
-        if nuevoNombre not in usuarios or nuevoNombre == usuario[0][0]:
-            cursor.execute(sql, usuario1)  # Actualizamos del usuario
+        usuarios_backend = cursor.fetchall()
+        usuarios_registrados = set(i[0] for i in usuarios_backend)
+        if not (nuevo_nombre in usuarios_registrados
+                 or nuevo_nombre == session['username']):
+            cursor.execute(sql, usuario_modificado)
+            session['username'] = nuevo_nombre
         else:
             flash('Nombre de usuario no disponible')
         conn.commit()
