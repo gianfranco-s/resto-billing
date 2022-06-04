@@ -57,7 +57,7 @@ def mesas():
             else:
                 plato_list = ['Sin pedidos']
                 cantidad_list = ['']
-                subtotales_list = ['']
+                subtotales_list = [0]
 
             pedido_dict['plato'] = plato_list
             pedido_dict['cantidad'] = cantidad_list
