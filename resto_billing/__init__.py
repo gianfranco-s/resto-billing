@@ -10,7 +10,6 @@ def create_app(test_config=None):
     app.config.from_mapping(SECRET_KEY='dev')
     app.config['CANTIDAD_DE_MESAS'] = int()
     app.config['CARPETA'] = os.path.join('fotos')
-    app.config['USUARIO'] = None
     
     if test_config is None:
         # load the instance config, if it exists, when not testing
@@ -36,7 +35,7 @@ def create_app(test_config=None):
     # For PostgreSQL connections
     
     database.create_tables()
-    database.create_admin_user(app.secret_key)
+    database.create_default_users(app.secret_key)
     database.define_default_category()
     
     if os.environ.get('FLASK_DEBUG', '').lower() in ('1', 'true'):
