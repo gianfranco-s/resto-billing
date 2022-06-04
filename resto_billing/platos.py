@@ -7,7 +7,7 @@ bp = Blueprint('platos',__name__)
 
 @bp.route('/update', methods=['POST'])
 @bp.route('/update/<int:id_plato>', methods=['POST'])
-def update(id_plato=None):
+def update_plato(id_plato=None):
     """Platos
     Alta y modificaciones
     """
@@ -66,7 +66,7 @@ def borrar_foto(nombre):
 
 @bp.route('/updateCategoria', methods=['POST'])
 @bp.route('/updateCategoria/<int:id_categoria>', methods=['POST'])
-def updateCategoria(id_categoria=None):
+def update_categoria(id_categoria=None):
     """Categorias
     Alta y modificaciones
     """
@@ -98,8 +98,8 @@ def uploads(nombreFoto):
     return send_from_directory(current_app.config['CARPETA'], nombreFoto)
 
 
-@bp.route('/edit/<int:id>')  # Recibe como parámetro el id del plato
-def edit(id):
+@bp.route('/edit/<int:id>')
+def show_plato_edit_form(id):
     """Formulario para editar el plato"""
 
     if 'username' in session:
@@ -121,7 +121,7 @@ def edit(id):
 
 
 @bp.route('/destroy/<int:id>')  # Recibe como parámetro el id del producto
-def destroy(id):
+def destroy_plato(id):
     """Borrado de plato por ID"""
 
     if 'username' in session:
@@ -140,7 +140,7 @@ def destroy(id):
 
 
 @bp.route('/destroyCategoria/<int:id>')
-def destroyCategoria(id):
+def destroy_categoria(id):
     """Borrado de categoria por ID"""
 
     if 'username' in session:

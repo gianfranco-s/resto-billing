@@ -4,7 +4,7 @@ from . import database
 bp = Blueprint('administracion',__name__)
 
 @bp.route('/administracion/')
-def administracion():
+def mostrar_administracion():
     """Administración
     Alta y edición de usuarios
     Platos

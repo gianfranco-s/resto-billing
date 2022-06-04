@@ -63,7 +63,7 @@ def ventas():
 
 
 @bp.route('/cerrar_cuenta/<int:mesa>/')
-def cerrarCuenta(mesa):
+def cerrar_cuenta(mesa):
     """Cerrar la cuenta de la mesa"""
 
     conn = database.connect()

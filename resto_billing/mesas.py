@@ -7,7 +7,7 @@ from datetime import datetime
 bp = Blueprint('mesas', __name__)
 
 @bp.route('/mesas/')
-def mesas():
+def listar_mesas():
     """Listado de mesas, carga de pedidos por mesa, y cierre de mesa
     mesas =[
         {
@@ -79,8 +79,8 @@ def mesas():
 
 
 @bp.route('/cantidad_mesas/', methods=['POST'])
-def cantidadMesas():
-    """Cantidad de mesas del negocio"""
+def establecer_mesas():
+    """Establece la cantidad de mesas del negociom según lo indica el usuario"""
 
     current_app.config['CANTIDAD_DE_MESAS'] = int(request.form['cantidad_mesas'])
     conn = database.connect()
@@ -97,7 +97,7 @@ def cantidadMesas():
 
 
 @bp.route('/platos/<int:id_mesa>/')
-def platos(id_mesa):
+def editar_pedido(id_mesa):
     """Listado del menu disponible
     Agregar o quitar platos al pedido
     """
@@ -114,7 +114,7 @@ def platos(id_mesa):
 
 
 @bp.route('/cargarPedido/<int:mesa>', methods=['POST'])
-def cargarPedido(mesa):
+def cargar_pedido(mesa):
     """Cargar pedidos a una mesa"""
 
     conn = database.connect()
