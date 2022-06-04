@@ -1,11 +1,5 @@
-import os
-
-import sqlite3
-
 import cryptocode
-import click
-from flask import Blueprint, current_app
-from flask.cli import with_appcontext
+from flask import Blueprint
 from os import environ
 
 # from flaskext.mysql import MySQL
@@ -112,7 +106,7 @@ def create_tables():
     conn.commit()
 
 
-def create_admin_user(secret_key):
+def create_default_users(secret_key):
     conn = connect()
     cursor = conn.cursor()
     # cursor.execute("SELECT count(*) FROM `my_resto`.`usuarios`")
@@ -127,10 +121,15 @@ def create_admin_user(secret_key):
     cursor.execute("SELECT count(*) FROM usuarios")
     cantidad_de_usuarios = cursor.fetchone()[0]
     if cantidad_de_usuarios == 0:
-        clave = cryptocode.encrypt('admin', secret_key)
-        cursor.execute("""INSERT INTO usuarios(
-            usuario,password,super_usuario)
-            VALUES (%s, %s, %s);""", ('admin', clave, '1'))
+        clave_admin = cryptocode.encrypt('admin', secret_key)
+        clave_normal = cryptocode.encrypt('normal', secret_key)
+        cursor.execute("""
+                INSERT INTO usuarios
+                    (usuario,password,super_usuario)
+                VALUES
+                    ('admin', %s, True),
+                    ('normal', %s, False);
+                """, (clave_admin, clave_normal))
     conn.commit()
 
 
