@@ -33,3 +33,8 @@ Connect to the project's database:
 ```
 # \c my_resto
 ```
+
+List tables:
+```
+# \dt
+```
