@@ -23,12 +23,12 @@ def ventas():
             fechasMin = (str((ventas[0][2]))).split(' ')[0]
         else:
             fechasMin = datetime.today().strftime('%Y-%m-%d')
-        fechasMax = datetime.today().strftime('%Y-%m-%d')
+        fechas_max = datetime.today().strftime('%Y-%m-%d')
         cursor.execute("SELECT count(*) FROM mesas")
-        totalMesas = cursor.fetchone()[0]
-        listaMesas = []
-        for i in range(1, totalMesas+1):
-            listaMesas.append(i)
+        total_mesas = cursor.fetchone()[0]
+        lista_mesas = []
+        for i in range(1, total_mesas+1):
+            lista_mesas.append(i)
         if desde and hasta:
             sql = """SELECT * FROM ventas
             WHERE hora_abre BETWEEN %s AND %s"""
@@ -41,10 +41,10 @@ def ventas():
             cursor.execute(sql, datos)
             ventas = list(cursor.fetchall())
             fechasMin = desde
-            fechasMax = hasta
+            fechas_max = hasta
         else:
             mesa = 'Todas'
-        fechasMinMax = (fechasMin, fechasMax)
+        fechas_min_max = (fechasMin, fechas_max)
         total = 0
         print('ventas = ',ventas)
         for i in range(len(ventas)):
@@ -55,8 +55,8 @@ def ventas():
         return render_template('ventas.html',
                                ventas=ventas,
                                total=total,
-                               fechasMinMax=fechasMinMax,
-                               listaMesas=listaMesas,
+                               fechasMinMax=fechas_min_max,
+                               listaMesas=lista_mesas,
                                mesa=mesa)
     flash('Usuario no autorizado a ver el historial')
     return redirect('/mesas')
@@ -72,15 +72,15 @@ def cerrar_cuenta(mesa):
     WHERE id_mesa = %s"""
     cursor.execute(sql, (mesa, ))
     extracto = cursor.fetchall()[0]
-    pedidos, horaAbre = extracto
+    pedidos, hora_abre = extracto
     # pedidosBorrar = json.loads(pedidos)
-    pedidosBorrar = pedidos
+    pedidos_borrar = pedidos
     pedidos = json.dumps(pedidos)
     resumen = []
     suma = 0
-    if type(pedidosBorrar) == dict:
-        for key in pedidosBorrar:
-            cant = pedidosBorrar[key]
+    if type(pedidos_borrar) == dict:
+        for key in pedidos_borrar:
+            cant = pedidos_borrar[key]
             sql2 = """SELECT precio FROM platos
                 WHERE nombre = %s;"""
             cursor.execute(sql2, (key, ))  # Buscamos el precio unitario del plato
@@ -90,16 +90,16 @@ def cerrar_cuenta(mesa):
             plato = (key, cant, monto)
             resumen.append(plato)
         resumen.append(suma)
-        sqlBorrar = """UPDATE mesas
+        sql_borrar = """UPDATE mesas
         SET pedidos=NULL, hora_abre=NULL
         WHERE id_mesa=%s;"""
-        cursor.execute(sqlBorrar, (mesa, ))
-        horaCierra = datetime.now()
-        datosVenta = (mesa, horaAbre, horaCierra, pedidos, suma)
+        cursor.execute(sql_borrar, (mesa, ))
+        hora_cierra = datetime.now()
+        datos_venta = (mesa, hora_abre, hora_cierra, pedidos, suma)
         sqlventa = """INSERT INTO ventas
         (mesa, hora_abre, hora_cierra, consumo, total)
         VALUES(%s, %s, %s, %s, %s);"""
-        cursor.execute(sqlventa, datosVenta)
+        cursor.execute(sqlventa, datos_venta)
         conn.commit()
         return render_template('/resumen.html', resumen=resumen)
     else:

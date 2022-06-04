@@ -24,18 +24,18 @@ def update_plato(id_plato=None):
         tiempo = now.strftime('%Y%H%M%S_')
         extension = foto.filename.split('.')
         if foto.filename != '':
-            nuevoNombreFoto = tiempo+nombre+'.'+extension[1]
-            foto.save('App_restaurant/fotos/'+nuevoNombreFoto)
+            nuevo_nombre_foto = tiempo+nombre+'.'+extension[1]
+            foto.save('App_restaurant/fotos/'+nuevo_nombre_foto)
             if id_plato:
                 sql = 'SELECT foto FROM platos WHERE id_plato=%s'
                 cursor.execute(sql, id_plato)
-                fotoVieja = cursor.fetchall()[0][0]
-                borrar_foto(fotoVieja)
+                foto_vieja = cursor.fetchall()[0][0]
+                borrar_foto(foto_vieja)
         else:
-            nuevoNombreFoto = request.form['viejoNombreFoto']
-            if nuevoNombreFoto == '':
-                nuevoNombreFoto = 'Sin foto'
-        dato = [nombre, descripcion_plato, precio, nuevoNombreFoto, categoria]
+            nuevo_nombre_foto = request.form['viejoNombreFoto']
+            if nuevo_nombre_foto == '':
+                nuevo_nombre_foto = 'Sin foto'
+        dato = [nombre, descripcion_plato, precio, nuevo_nombre_foto, categoria]
         if id_plato:
             dato.append(id_plato)
             sql = """UPDATE platos

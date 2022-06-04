@@ -131,19 +131,19 @@ def cargar_pedido(mesa):
         sql = "UPDATE mesas SET hora_abre=%s WHERE id_mesa=%s;"
         cursor.execute(sql, datos)
         pedidos = {}
-    keysDB = pedidos.keys()
-    datosForm = request.form
-    keysForm = datosForm.keys()
-    for keyForm in keysForm:
-        if int(datosForm[keyForm]) != 0:
-            valor = int(datosForm[keyForm])
-            if keyForm in keysDB:  # Pedido previamente
-                if (int(pedidos[keyForm]) + valor) > 0:
-                    pedidos[keyForm] = int(pedidos[keyForm]) + valor
+    keys_db = pedidos.keys()
+    datos_form = request.form
+    keys_form = datos_form.keys()
+    for key_form in keys_form:
+        if int(datos_form[key_form]) != 0:
+            valor = int(datos_form[key_form])
+            if key_form in keys_db:  # Pedido previamente
+                if (int(pedidos[key_form]) + valor) > 0:
+                    pedidos[key_form] = int(pedidos[key_form]) + valor
                 else:
-                    pedidos.pop(keyForm)
+                    pedidos.pop(key_form)
             elif valor > 0:
-                pedidos.setdefault(keyForm, datosForm[keyForm])
+                pedidos.setdefault(key_form, datos_form[key_form])
         for key in pedidos:
             pedidos[key] = int(pedidos[key])
     sql = "UPDATE mesas SET pedidos=%s WHERE id_mesa=%s;"
