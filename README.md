@@ -18,3 +18,18 @@ Drop database:
 ```
 sudo -u postgres psql -c 'DROP DATABASE my_resto'
 ```
+
+Interactive PostgreSQL console:
+```
+sudo -u postgres psql
+```
+
+List databases:
+```
+# \l
+```
+
+Connect to the project's database:
+```
+# \c my_resto
+```
