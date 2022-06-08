@@ -1,6 +1,6 @@
 import os
 from flask import Blueprint, session, request, redirect, send_from_directory, current_app, render_template
-from resto_billing import database
+from resto_billing.models import database
 from datetime import datetime
 
 bp = Blueprint('platos',__name__)

@@ -1,6 +1,6 @@
 
 from flask import Blueprint, render_template, request, session, redirect, flash, current_app
-from resto_billing import database
+from resto_billing.models import database
 import cryptocode
 
 bp = Blueprint('start', __name__)

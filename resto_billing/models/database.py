@@ -15,9 +15,9 @@ def connect():
 
     return psycopg2.connect(
                 host = 'localhost',
-                dbname = environ.get('PGDB','my_resto'),
-                user = environ.get('PGUSR','resto_billing'),
-                password = environ.get('PGPASS','resto_billing')
+                dbname = environ.get('POSTGRES_DB','my_resto'),
+                user = environ.get('POSTGRES_USR','resto_billing'),
+                password = environ.get('POSTGRES_PWD','resto_billing')
                 )
 
 

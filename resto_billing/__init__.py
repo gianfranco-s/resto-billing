@@ -24,7 +24,7 @@ def create_app(test_config=None):
     except OSError:
         pass
     
-    from . import database
+    from .models import database
     app.register_blueprint(database.bp)
     
     # For MySQL connections:
