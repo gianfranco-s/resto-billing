@@ -1,5 +1,5 @@
 from flask import Blueprint, session, current_app, render_template, redirect
-from . import database
+from resto_billing import database
 
 bp = Blueprint('administracion',__name__)
 

@@ -41,23 +41,23 @@ def create_app(test_config=None):
     if os.environ.get('FLASK_DEBUG', '').lower() in ('1', 'true'):
         database.load_test_data()
 
-    from . import start
+    from resto_billing.views import start
     app.register_blueprint(start.bp)
 
 
-    from . import mesas
+    from resto_billing.views import mesas
     app.register_blueprint(mesas.bp)
 
 
-    from . import administracion
+    from resto_billing.views import administracion
     app.register_blueprint(administracion.bp)
 
 
-    from . import platos
+    from resto_billing.views import platos
     app.register_blueprint(platos.bp)
 
 
-    from . import historial
+    from resto_billing.views import historial
     app.register_blueprint(historial.bp)
 
     return app

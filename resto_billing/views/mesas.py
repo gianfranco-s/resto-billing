@@ -1,6 +1,6 @@
 
 from flask import Blueprint, session, request, current_app, render_template, flash, redirect, make_response
-from . import database
+from resto_billing import database
 import json
 from datetime import datetime
 

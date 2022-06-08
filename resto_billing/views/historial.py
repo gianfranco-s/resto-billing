@@ -1,7 +1,7 @@
 import json
 
 from flask import Blueprint, session, request, render_template, redirect, flash
-from . import database
+from resto_billing import database
 from datetime import datetime
 
 bp = Blueprint('historial',__name__)
