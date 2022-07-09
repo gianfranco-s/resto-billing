@@ -2,7 +2,7 @@ This repo is loosely forked from https://github.com/guillermo-k/App_restaurant
 
 ## Run the project
 ``` 
-export FLASK_DEBUG=1; export FLASK_APP=resto_billing; export FLASK_ENV=development; flask run
+export FLASK_DEBUG=1 && export FLASK_APP=resto_billing && export FLASK_ENV=development && flask run
 ```
 
 This is the login page you should see
