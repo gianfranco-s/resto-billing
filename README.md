@@ -1,4 +1,4 @@
-This repo is forked from https://github.com/guillermo-k/App_restaurant
+This repo is loosely forked from https://github.com/guillermo-k/App_restaurant
 
 ## Run the project
 ``` 
